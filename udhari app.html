@@ -1,0 +1,167 @@
+<!DOCTYPE html><html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Udhaari Manager Pro</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background-color: #f0f2f5;
+    }header {
+  background-color: #4CAF50;
+  color: white;
+  padding: 15px;
+  text-align: center;
+  font-size: 24px;
+  font-weight: bold;
+  box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+}
+
+.container {
+  max-width: 600px;
+  margin: 20px auto;
+  background-color: white;
+  padding: 20px;
+  border-radius: 15px;
+  box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+}
+
+.input-group {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 15px;
+}
+
+input {
+  flex: 1;
+  padding: 10px;
+  border-radius: 8px;
+  border: 1px solid #ccc;
+}
+
+button {
+  padding: 10px 15px;
+  border: none;
+  border-radius: 8px;
+  background-color: #4CAF50;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  transition: transform 0.2s;
+}
+
+button:active {
+  transform: scale(0.95);
+}
+
+.record {
+  border: 1px solid #eee;
+  padding: 10px;
+  border-radius: 10px;
+  margin: 10px 0;
+  background-color: #f9f9f9;
+  position: relative;
+}
+
+.balance {
+  font-weight: bold;
+}
+
+.positive {
+  color: green;
+}
+
+.negative {
+  color: red;
+}
+
+.delete-btn {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background-color: red;
+  color: black;
+  border: none;
+  border-radius: 50%;
+  width: 33px;
+  height: 33px;
+  cursor: pointer;
+  font-weight: bold;
+}
+
+  </style>
+</head>
+<body>
+  <header>Udhaari Manager Pro</header>
+  <div class="container">
+    <div class="input-group">
+      <input type="text" id="customerName" placeholder="Customer Name" />
+      <button onclick="addCustomer()">Add</button>
+    </div><div id="customerList"></div>
+
+  </div>  <script>
+    let customers = JSON.parse(localStorage.getItem('udhaarData')) || {};
+
+    function saveData() {
+      localStorage.setItem('udhaarData', JSON.stringify(customers));
+    }
+
+    function addCustomer() {
+      const name = document.getElementById('customerName').value.trim();
+      if (!name || customers[name]) return;
+      customers[name] = { udhaar: 0, history: [] };
+      document.getElementById('customerName').value = '';
+      saveData();
+      loadCustomers();
+    }
+
+    function deleteCustomer(name) {
+      if (confirm(`Delete record for ${name}?`)) {
+        delete customers[name];
+        saveData();
+        loadCustomers();
+      }
+    }
+
+    function loadCustomers() {
+      const list = document.getElementById('customerList');
+      list.innerHTML = '';
+
+      for (const name in customers) {
+        const div = document.createElement('div');
+        div.className = 'record';
+
+        const bal = customers[name].udhaar;
+        const balanceClass = bal >= 0 ? 'positive' : 'negative';
+
+        div.innerHTML = `
+          <button class="delete-btn" onclick="deleteCustomer('${name}')">&times;</button>
+          <h3>${name}</h3>
+          <p class="balance ${balanceClass}">Balance: Rs. ${bal}</p>
+          <div class="input-group">
+            <input type="number" placeholder="Amount" id="amt-${name}" />
+            <button onclick="updateUdhaar('${name}', 'add')">Udhar</button>
+            <button onclick="updateUdhaar('${name}', 'pay')">recover</button>
+          </div>
+        `;
+        list.appendChild(div);
+      }
+    }
+
+    function updateUdhaar(name, type) {
+      const input = document.getElementById(`amt-${name}`);
+      let amount = parseFloat(input.value);
+      if (isNaN(amount) || amount <= 0) return;
+
+      if (type === 'add') customers[name].udhaar += amount;
+      else customers[name].udhaar -= amount;
+
+      input.value = '';
+      saveData();
+      loadCustomers();
+    }
+
+    loadCustomers();
+  </script></body>
+</html>
